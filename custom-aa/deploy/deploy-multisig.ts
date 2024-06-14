@@ -8,7 +8,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const PRIVATE_KEY = process.env.WALLET_PRIVATE_KEY || "";
-const AA_FACTORY_ADDRESS = process.env.WALLET_PRIVATE_KEY || "";
+const AA_FACTORY_ADDRESS = process.env.AA_FACTORY_ADDRESS || "";
 
 export default async function (hre: HardhatRuntimeEnvironment) {
   const provider = new Provider("https://sepolia.era.zksync.dev");
