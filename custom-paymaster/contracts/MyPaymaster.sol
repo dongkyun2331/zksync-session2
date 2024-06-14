@@ -78,7 +78,7 @@ contract MyPaymaster is IPaymaster {
                 _transaction.maxFeePerGas;
 
             try
-                IERC20(token).transferFrom(userAddress, thisAddress, amount)
+                IERC20(token).transferFrom(userAddress, thisAddress, requiredETH)
             {} catch (bytes memory revertReason) {
                 // If the revert reason is empty or represented by just a function selector,
                 // we replace the error with a more user-friendly message
@@ -112,7 +112,8 @@ contract MyPaymaster is IPaymaster {
         ExecutionResult _txResult,
         uint256 _maxRefundedGas
     ) external payable override onlyBootloader {
-        // Refunds are not supported yet.
+        address userAddress = address(uint160(_transaction.from));
+        IERC20(allowedToken).transfer(userAddress, _maxRefundedGas * _transaction.maxFeePerGas);
     }
 
     receive() external payable {}

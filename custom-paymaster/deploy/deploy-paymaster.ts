@@ -14,7 +14,7 @@ export default async function () {
   await (
     await wallet.sendTransaction({
       to: paymasterAddress,
-      value: ethers.parseEther("0.006"),
+      value: ethers.parseEther("0.06"),
     })
   ).wait();
 
@@ -24,7 +24,7 @@ export default async function () {
 
   // Supplying the ERC20 tokens to the wallet:
   // We will give the wallet 3 units of the token:
-  await (await erc20.mint(wallet.address, 3)).wait();
+  await (await erc20.mint(wallet.address, ethers.parseEther("3"))).wait();
 
   console.log("Minted 3 tokens for the wallet");
   console.log(`Done!`);

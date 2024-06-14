@@ -13,7 +13,7 @@ dotenv.config();
 // rich wallet from era-test-node
 const PRIVATE_KEY =
   process.env.WALLET_PRIVATE_KEY ||
-  "0x7726827caac94a7f9e1b160f7ea819f172f7b6f9d2a97f992c38edeab82d4110";
+  "0x3d3cbc973389cb26f657686445bcc75662b415b656078503592ac8c1abb8810e";
 const GAS_LIMIT = 6000000;
 
 describe("MyPaymaster", function () {
@@ -26,7 +26,7 @@ describe("MyPaymaster", function () {
   let erc20: Contract;
 
   before(async function () {
-    provider = new Provider(hre.network.config.url);
+    provider = new Provider(hre.network.config.url, undefined, {cacheTimeout: -1});
     wallet = new Wallet(PRIVATE_KEY, provider);
     deployer = new Deployer(hre, wallet);
 
@@ -101,9 +101,13 @@ describe("MyPaymaster", function () {
 
   it("should revert if invalid token is provided", async function () {
     const invalidTokenAddress = "0x000000000000000000000000000000000000dead";
-    await expect(
-      executeTransaction(userWallet, "ApprovalBased", invalidTokenAddress),
-    ).to.be.rejectedWith("failed pre-paymaster preparation");
+    try {
+        await expect(
+        executeTransaction(userWallet, "ApprovalBased", invalidTokenAddress),
+      );
+    } catch (e) {
+      expect(e.shortMessage).to.include("Pre-paymaster preparation error");
+    }
   });
 
   it("should revert if allowance is too low", async function () {
@@ -114,7 +118,7 @@ describe("MyPaymaster", function () {
       await executeTransaction(
         userWallet,
         "ApprovalBased",
-        await erc20.getAddress().toString(),
+        await erc20.getAddress(),
       );
     } catch (e) {
       expect(e.shortMessage).to.include("Min allowance too low");

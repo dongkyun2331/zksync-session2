@@ -8,8 +8,8 @@ import dotenv from "dotenv";
 // Load env file
 dotenv.config();
 
-const PAYMASTER_ADDRESS = process.env.PAYMASTER_ADDRESS || "";
-const TOKEN_ADDRESS = process.env.TOKEN_ADDRESS || "";
+const PAYMASTER_ADDRESS = "";
+const TOKEN_ADDRESS = "";
 
 function getToken(hre: HardhatRuntimeEnvironment, wallet: Wallet) {
   const artifact = hre.artifacts.readArtifactSync("MyERC20");
@@ -20,30 +20,35 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   const provider = getProvider();
   const wallet = getWallet();
 
+  const erc20 = getToken(hre, wallet);
+  const gasPrice = await provider.getGasPrice();
+
+
   console.log(
     `ERC20 token balance of the wallet before mint: ${await wallet.getBalance(
       TOKEN_ADDRESS,
     )}`,
   );
-
+  
   let paymasterBalance = await provider.getBalance(PAYMASTER_ADDRESS);
   console.log(`Paymaster ETH balance is ${paymasterBalance.toString()}`);
 
-  const erc20 = getToken(hre, wallet);
-  const gasPrice = await provider.getGasPrice();
+
+  let paymasterERCBalance = await erc20.balanceOf(PAYMASTER_ADDRESS);
+  console.log(`Paymaster ERC20 balance is ${paymasterERCBalance.toString()}`);
 
   // Encoding the "ApprovalBased" paymaster flow's input
   const paymasterParams = utils.getPaymasterParams(PAYMASTER_ADDRESS, {
     type: "ApprovalBased",
     token: TOKEN_ADDRESS,
     // set minimalAllowance as we defined in the paymaster contract
-    minimalAllowance: BigInt("1"),
+    minimalAllowance: ethers.parseEther("1"),
     // empty bytes as testnet paymaster does not use innerInput
     innerInput: new Uint8Array(),
   });
 
   // Estimate gas fee for mint transaction
-  const gasLimit = await erc20.mint.estimateGas(wallet.address, 5, {
+  const gasLimit = await erc20.mint.estimateGas(wallet.address, ethers.parseEther("5"), {
     customData: {
       gasPerPubdata: utils.DEFAULT_GAS_PER_PUBDATA_LIMIT,
       paymasterParams: paymasterParams,
@@ -55,7 +60,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
   console.log(`Minting 5 tokens for the wallet via paymaster...`);
   await (
-    await erc20.mint(wallet.address, 5, {
+    await erc20.mint(wallet.address, ethers.parseEther("5"), {
       // paymaster info
       customData: {
         paymasterParams: paymasterParams,
